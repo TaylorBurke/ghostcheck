@@ -75,6 +75,7 @@ def parse_posting(url: str, raw_html: str) -> Posting:
         title=job.get("title", ""),
         company=company,
         location=_location(job),
+        company_url=(org.get("sameAs") or org.get("url") or "") if isinstance(org, dict) else "",
         description=html_to_text(job.get("description", "")),
         date_posted=parse_date(job.get("datePosted")),
         valid_through=parse_date(job.get("validThrough")),

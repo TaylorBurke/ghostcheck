@@ -13,6 +13,7 @@ class Posting:
     description: str = ""
     date_posted: date | None = None
     valid_through: date | None = None
+    company_url: str = ""
     last_updated: date | None = None  # informational only; not scored
     has_salary: bool = False
 

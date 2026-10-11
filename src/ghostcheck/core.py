@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from . import ats, news, signals
+from . import ats, domain, news, signals
 from .history import History
 from .http import get
 from .models import Posting, Report
@@ -35,6 +35,11 @@ def check(
         elif posting.company:
             lv = ats.find_on_boards(posting.company, posting.title)
 
+    dom, how, registered = None, "", None
+    if not offline and (found := domain.company_domain(url, posting.company_url, posting.company)):
+        dom, how = found
+        registered = domain.registration_date(dom)
+
     first_seen, urls = None, 0
     if history:
         history.record(posting, today)
@@ -48,6 +53,7 @@ def check(
         signals.liveness(lv),
         signals.duplicates(lv),
         signals.quality(posting),
+        signals.domain_age(dom, how, registered, today),
         signals.company(None if offline else news.layoff_headlines(posting.company)),
     ]
     score = signals.combine(sigs)

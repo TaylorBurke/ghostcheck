@@ -78,6 +78,22 @@ def test_news_headline_proximity():
     assert news.layoff_headlines("") is None
 
 
+def test_domain_age_buckets():
+    s = signals.domain_age("acme.io", "job link", date(2026, 9, 1), TODAY)
+    assert s.points == 20 and "acme.io" in s.detail
+    assert signals.domain_age("acme.io", "x", date(2015, 1, 1), TODAY).points == -3
+    assert signals.domain_age(None, "", None, TODAY).points is None
+    assert signals.domain_age("a.com", "x", None, TODAY).points is None
+
+
+def test_company_domain_resolution():
+    from ghostcheck.domain import company_domain, registrable
+    assert registrable("careers.acme.co.uk") == "acme.co.uk"
+    assert company_domain("https://jobs.lever.co/acme/1", "https://www.acme.com/about") == ("acme.com", "posting")
+    assert company_domain("https://careers.acme.com/job/1") == ("acme.com", "job link")
+    assert company_domain("https://www.linkedin.com/jobs/view/1") is None
+
+
 def test_company_signal_keeps_links():
     s = signals.company([("Acme lays off 200", "http://n/1")])
     assert s.links == [("Acme lays off 200", "http://n/1")]

@@ -99,6 +99,26 @@ def company(layoff_headlines: list[tuple[str, str]] | None) -> Signal:
     return Signal("company", pts, f"{len(layoff_headlines)} layoff/hiring-freeze headline(s)", list(layoff_headlines))
 
 
+def domain_age(domain: str | None, how: str, registered: date | None, today: date) -> Signal:
+    """Young company domains are a mild red flag. Old ones are weak evidence only (domains get bought)."""
+    if not domain:
+        return Signal("domain", None, "company website not identified")
+    if registered is None:
+        return Signal("domain", None, f"{domain} ({how}): registration date unavailable")
+    days = (today - registered).days
+    age = f"{days} days" if days < 365 else f"{days / 365:.1f} years"
+    note = f"{domain} registered {registered} ({age} old; {how})"
+    if days < 90:
+        return Signal("domain", 20, note)
+    if days < 365:
+        return Signal("domain", 10, note)
+    if days < 730:
+        return Signal("domain", 4, note)
+    if days > 5 * 365:
+        return Signal("domain", -3, note)
+    return Signal("domain", 0, note)
+
+
 def verdict(score: int) -> str:
     if score >= 60:
         return "likely ghost"
