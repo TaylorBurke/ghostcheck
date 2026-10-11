@@ -9,6 +9,11 @@ from .core import check
 from .history import History
 
 
+def _link(text: str, url: str) -> str:
+    """Clickable OSC 8 hyperlink on a terminal; plain text when piped (the URL is printed separately)."""
+    return f"\033]8;;{url}\033\\{text}\033]8;;\033\\" if sys.stdout.isatty() else text
+
+
 def _csv_urls(path: str) -> list[tuple[str, str]]:
     """(label, url) for each row with a link; the link column is the first header containing 'link' or 'url'."""
     with open(path, newline="") as f:
@@ -67,6 +72,10 @@ def main(argv: list[str] | None = None) -> int:
     for s in r.signals:
         pts = "  ?  " if s.points is None else f"{s.points:+d}".rjust(5)
         print(f"  {pts}  {s.name:<10} {s.detail}")
+        for title, url in s.links:
+            print(f"{'':19}- {_link(title, url)}")
+            if not sys.stdout.isatty():
+                print(f"{'':21}{url}")
     return 0
 
 

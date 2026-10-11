@@ -13,6 +13,7 @@ class Posting:
     description: str = ""
     date_posted: date | None = None
     valid_through: date | None = None
+    last_updated: date | None = None  # informational only; not scored
     has_salary: bool = False
 
 
@@ -23,6 +24,8 @@ class Signal:
     # `None` weight means the signal could not be evaluated.
     points: int | None
     detail: str
+    # Supporting links as (label, url), e.g. the headlines behind a company signal.
+    links: list[tuple[str, str]] = field(default_factory=list)
 
 
 @dataclass

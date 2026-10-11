@@ -15,6 +15,11 @@ def test_age_buckets():
     assert signals.age(Posting("u"), TODAY).points is None
 
 
+def test_age_detail_shows_last_updated():
+    p = Posting("u", date_posted=date(2026, 5, 1), last_updated=date(2026, 10, 1))
+    assert "last updated 9 days ago" in signals.age(p, TODAY).detail
+
+
 def test_expired_valid_through():
     p = Posting("u", valid_through=date(2026, 9, 1))
     assert signals.age(p, TODAY).points == 25
@@ -71,6 +76,12 @@ def test_news_headline_proximity():
     import re
     from ghostcheck import news
     assert news.layoff_headlines("") is None
+
+
+def test_company_signal_keeps_links():
+    s = signals.company([("Acme lays off 200", "http://n/1")])
+    assert s.links == [("Acme lays off 200", "http://n/1")]
+    assert signals.company([]).links == []
 
 
 def test_csv_urls(tmp_path):

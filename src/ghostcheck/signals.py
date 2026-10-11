@@ -27,13 +27,16 @@ def age(p: Posting, today: date) -> Signal:
     if not p.date_posted:
         return Signal("age", None, "no posting date available")
     days = (today - p.date_posted).days
+    note = f"posted {days} days ago"
+    if p.last_updated and p.last_updated != p.date_posted:
+        note += f" (last updated {(today - p.last_updated).days} days ago)"
     if days > 90:
-        return Signal("age", 25, f"posted {days} days ago")
+        return Signal("age", 25, note)
     if days > 60:
-        return Signal("age", 15, f"posted {days} days ago")
+        return Signal("age", 15, note)
     if days > 30:
-        return Signal("age", 6, f"posted {days} days ago")
-    return Signal("age", -5, f"posted {days} days ago")
+        return Signal("age", 6, note)
+    return Signal("age", -5, note)
 
 
 def reposts(first_seen: date | None, urls: int, today: date) -> Signal:
@@ -87,13 +90,13 @@ def quality(p: Posting) -> Signal:
     return Signal("quality", pts, "; ".join(notes) or "description looks specific")
 
 
-def company(layoff_headlines: list[str] | None) -> Signal:
+def company(layoff_headlines: list[tuple[str, str]] | None) -> Signal:
     if layoff_headlines is None:
         return Signal("company", None, "news lookup unavailable")
     if not layoff_headlines:
         return Signal("company", 0, "no recent layoff/hiring-freeze headlines")
     pts = min(5 + 5 * len(layoff_headlines), 15)
-    return Signal("company", pts, f"{len(layoff_headlines)} headline(s), e.g. \"{layoff_headlines[0]}\"")
+    return Signal("company", pts, f"{len(layoff_headlines)} layoff/hiring-freeze headline(s)", list(layoff_headlines))
 
 
 def verdict(score: int) -> str:

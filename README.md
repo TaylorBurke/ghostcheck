@@ -24,8 +24,12 @@ ghost score: 41/100  ->  suspicious
    -15  liveness   posting is listed on greenhouse board 'acme'
     +0  duplicates 1 role(s) with this title among 645 open
     +5  quality    no salary range
-    +0  company    no recent layoff/hiring-freeze headlines
+   +10  company    1 layoff/hiring-freeze headline(s)
+                   - Acme lays off 200 staff - Example News
+                     https://news.google.com/rss/articles/...
 ```
+
+Headlines behind the company signal are listed with links so you can read them and decide whether they apply.
 
 Options: `--json` (machine-readable), `--offline` (skip network lookups beyond the page fetch),
 `--no-history` (don't record the check).
@@ -73,7 +77,7 @@ History lives in `~/.local/share/ghostcheck/history.db` (respects `XDG_DATA_HOME
 - Scores are heuristics, not proof. The weights are hand-picked and untuned.
 - LinkedIn, Indeed and similar sites block scraping. For those links, ghostcheck relies on
   matching the company name to a Greenhouse/Lever/Ashby board, which fails for companies using other systems.
-- ATS dates can be misleading: Greenhouse's first-published date can be old for a reused requisition.
+- Age is not proof: big companies keep roles open for months. Age is the first-published date (Greenhouse, Lever, Ashby) or `datePosted`; the last-updated date is shown for context but not scored.
 - The news check matches headlines by pattern and can miss or mislabel stories.
 - It makes requests to the job site, ATS APIs and Google News from your machine. Be considerate with large batches.
 

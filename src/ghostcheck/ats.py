@@ -124,6 +124,7 @@ def fetch_posting(ref: AtsRef, url: str):
             location=(d.get("location") or {}).get("name", ""),
             description=html_to_text(d.get("content", "")),
             date_posted=parse_date(d.get("first_published") or d.get("updated_at")),
+            last_updated=parse_date(d.get("updated_at")),
             has_salary=bool(d.get("pay_input_ranges")),
         )
     if ref.vendor == "lever":
