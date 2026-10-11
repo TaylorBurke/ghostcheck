@@ -59,11 +59,7 @@ def test_parse_jsonld():
 
 
 def test_history_repost_detection():
-    h = History.__new__(History)
-    import sqlite3
-    h.path = ":memory:"
-    h.db = sqlite3.connect(":memory:")
-    h.db.execute("CREATE TABLE seen (fp TEXT, url TEXT, seen_on TEXT, date_posted TEXT, PRIMARY KEY (fp, url, seen_on))")
+    h = History(":memory:")
     p1, p2 = Posting("a", title="Dev", company="Acme"), Posting("b", title="Dev", company="Acme")
     h.record(p1, date(2026, 8, 1))
     h.record(p2, TODAY)

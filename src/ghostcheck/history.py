@@ -5,6 +5,7 @@ import hashlib
 import os
 import re
 import sqlite3
+import threading
 from datetime import date
 from pathlib import Path
 
@@ -26,23 +27,27 @@ class History:
         self.path = path or default_path()
         if str(self.path) != ":memory:":
             self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(str(self.path))
+        self._lock = threading.Lock()  # checks may run in worker threads
+        self.db = sqlite3.connect(str(self.path), check_same_thread=False)
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS seen (fp TEXT, url TEXT, seen_on TEXT, date_posted TEXT, "
             "PRIMARY KEY (fp, url, seen_on))"
         )
 
     def record(self, p: Posting, today: date) -> None:
-        self.db.execute(
-            "INSERT OR IGNORE INTO seen VALUES (?,?,?,?)",
-            (fingerprint(p), p.url, today.isoformat(), p.date_posted.isoformat() if p.date_posted else None),
-        )
-        self.db.commit()
+        with self._lock:
+            self.db.execute(
+                "INSERT OR IGNORE INTO seen VALUES (?,?,?,?)",
+                (fingerprint(p), p.url, today.isoformat(), p.date_posted.isoformat() if p.date_posted else None),
+            )
+            self.db.commit()
 
     def first_seen(self, p: Posting) -> date | None:
-        row = self.db.execute("SELECT MIN(seen_on) FROM seen WHERE fp=?", (fingerprint(p),)).fetchone()
+        with self._lock:
+            row = self.db.execute("SELECT MIN(seen_on) FROM seen WHERE fp=?", (fingerprint(p),)).fetchone()
         return date.fromisoformat(row[0]) if row and row[0] else None
 
     def distinct_urls(self, p: Posting) -> int:
         """Same role seen under several URLs/ids is a repost signal."""
-        return self.db.execute("SELECT COUNT(DISTINCT url) FROM seen WHERE fp=?", (fingerprint(p),)).fetchone()[0]
+        with self._lock:
+            return self.db.execute("SELECT COUNT(DISTINCT url) FROM seen WHERE fp=?", (fingerprint(p),)).fetchone()[0]
