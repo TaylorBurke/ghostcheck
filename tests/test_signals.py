@@ -105,3 +105,11 @@ def test_csv_urls(tmp_path):
     f = tmp_path / "a.csv"
     f.write_text("Employer,Job Title,Job Posting Link\nAcme,Dev,http://x\nBeta,QA,\n")
     assert _csv_urls(str(f)) == [("Acme / Dev", "http://x")]
+
+
+def test_same_role_ignores_location_suffix_and_rejects_others():
+    from ghostcheck.ats import _same_role
+    assert _same_role("Forward Deployed AI Engineer (Python)", "Forward Deployed AI Engineer (Python) - Remote - USA")
+    assert _same_role("Software Engineer II, Backend", "Software Engineer II Backend")
+    assert not _same_role("Software Engineer", "Senior Software Engineer")
+    assert not _same_role("Frontend Engineer", "Backend Engineer")

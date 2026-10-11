@@ -14,7 +14,7 @@ def get(url: str, timeout: float = 15) -> tuple[int, str]:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
-        return e.code, ""
+        return e.code, ""  # 403/429 usually mean "blocked", not "removed"; callers decide
     except (urllib.error.URLError, TimeoutError, OSError):
         return 0, ""
 

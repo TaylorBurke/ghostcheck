@@ -21,12 +21,12 @@ def check(
     ref = ats.detect(url)
     if posting is None and ref and not offline:
         posting = ats.fetch_posting(ref, url)
+    gone = False
     if posting is None:
         status, raw = get(url)
         posting = parse_posting(url, raw) if status == 200 else Posting(url=url)
-        if status != 200:
-            posting.description = ""
-    gone = posting.title == "" and posting.description == ""
+        # Only 404/410 mean the posting was removed; 403/429/timeouts are just blocked or flaky.
+        gone = status in (404, 410)
 
     lv = None
     if not offline:
@@ -39,6 +39,13 @@ def check(
     if not offline and (found := domain.company_domain(url, posting.company_url, posting.company)):
         dom, how = found
         registered = domain.registration_date(dom)
+
+    # Aggregator link matched to a company board entry: borrow its real date/salary/description.
+    if lv and lv.match and (rich := ats.fetch_posting(lv.match, url)):
+        posting.date_posted = posting.date_posted or rich.date_posted
+        posting.last_updated = posting.last_updated or rich.last_updated
+        posting.has_salary = posting.has_salary or rich.has_salary
+        posting.description = posting.description or rich.description
 
     first_seen, urls = None, 0
     if history:
@@ -59,5 +66,5 @@ def check(
     score = signals.combine(sigs)
     if gone and not offline:
         score = max(score, 60)
-        sigs.append(signals.Signal("fetch", None, "page could not be fetched (removed, or blocked)"))
+        sigs.append(signals.Signal("fetch", None, "page returned 404/410 (removed)"))
     return Report(posting, score, signals.verdict(score), sigs)
